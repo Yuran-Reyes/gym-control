@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#101827" />
   <link rel="manifest" href="manifest.json" />
-  <title>Gym Control Pareja V5</title>
+  <title>Gym Control Pareja V5.1</title>
   <style>
     :root{
       --bg:#0b1220; --card:#111c2e; --card2:#17243a; --text:#f6f7fb;
@@ -236,7 +236,7 @@
     </div>
     <section class="hero">
       <div class="badge">⏱️ Rutinas de 45, 60, 75 o 90 minutos</div>
-      <h1>Gym Control Pareja V5</h1>
+      <h1>Gym Control Pareja V5.1</h1>
       <p id="heroGoal">Entrenamiento guiado con imágenes reales, registro de cargas y progreso controlado.</p>
       <div class="kpis">
         <div class="kpi"><span class="small">Racha</span><strong id="kpiStreak">0 días</strong></div>
@@ -482,10 +482,13 @@ const weekDays=['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domi
 appData.sharedMealPlan = appData.sharedMealPlan || Object.fromEntries(weekDays.map(d=>[d,'']));
 appData.shoppingChecks = appData.shoppingChecks || {};
 Object.values(appData.profiles).forEach(p=>{
+  p.measurements = p.measurements || [];
+  p.workouts = p.workouts || [];
+  p.weights = p.weights || {};
   p.goals = p.goals || {weight:'',waist:'',workouts:5,water:8};
 });
-save();
-
+// Persist only the migrated structure here. Do not call refresh before the app is initialized.
+localStorage.setItem('gymControlProfiles', JSON.stringify(appData));
 
 const IMG_BASE='https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/';
 
@@ -679,18 +682,24 @@ function save(){
   refresh();
 }
 function selectProfile(profile){
-  if(!appData.profiles[profile]) return;
-  activeProfile=profile;
-  appData.activeProfile=profile;
-  state=appData.profiles[profile];
-  routines=profileRoutines[profile];
-  localStorage.setItem('gymControlProfiles', JSON.stringify(appData));
-  document.getElementById('profileOverlay').classList.add('hidden');
-  document.getElementById('profileStatus').textContent='Perfil cargado correctamente';
-  applyProfileUI();
-  renderRoutine();
-  renderMeals();
-  refresh();
+  try{
+    if(!appData.profiles[profile]) throw new Error('Perfil no encontrado');
+    activeProfile=profile;
+    appData.activeProfile=profile;
+    state=appData.profiles[profile];
+    routines=profileRoutines[profile];
+    localStorage.setItem('gymControlProfiles', JSON.stringify(appData));
+    applyProfileUI();
+    renderRoutine();
+    renderMeals();
+    refresh();
+    document.getElementById('profileStatus').textContent=`Perfil ${state.name} cargado correctamente`;
+    document.getElementById('profileOverlay').classList.add('hidden');
+  }catch(error){
+    console.error(error);
+    document.getElementById('profileStatus').textContent='No se pudo abrir el perfil. Actualice la página.';
+    alert('Ocurrió un error al abrir el perfil. Actualice la página e inténtelo nuevamente.');
+  }
 }
 function switchProfile(){
   document.getElementById('profileOverlay').classList.remove('hidden');
@@ -1032,7 +1041,9 @@ function refresh(){dashboard();renderMeasurements();renderWeightHistory();reques
 applyProfileUI();setDuration(selectedDuration);renderMeals();refresh();
 updateTimerUI();window.addEventListener('resize',()=>{drawLineChart('progressChart','chartEmpty',chartMetric);drawLineChart('detailChart','detailChartEmpty',progressMetric)});
 
-if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{});}
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./sw.js?v=5.1').then(reg=>reg.update()).catch(()=>{});
+}
 </script>
 </body>
 </html>
