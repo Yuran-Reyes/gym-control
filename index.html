@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#101827" />
   <link rel="manifest" href="manifest.json" />
-  <title>Gym Control Pareja V5.1</title>
+  <title>Gym Control Pareja V6 Coach</title>
   <style>
     :root{
       --bg:#0b1220; --card:#111c2e; --card2:#17243a; --text:#f6f7fb;
@@ -205,6 +205,37 @@
       .timer-display{font-size:34px}
     }
 
+    .checkin-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+    .checkin-card{background:#0d1727;border:1px solid var(--line);border-radius:14px;padding:12px}
+    .checkin-card label{display:block;margin-bottom:7px}
+    .checkin-card select,.checkin-card input{width:100%}
+    .recommendation{background:linear-gradient(135deg,rgba(87,211,140,.12),rgba(103,168,255,.08));border:1px solid rgba(87,211,140,.35);border-radius:14px;padding:14px;margin-top:12px}
+    .pain-high{border-color:#ff7e86!important;background:rgba(255,126,134,.08)!important}
+    .alt-box{margin-top:10px;padding:10px;border-radius:12px;background:#0d1727;border:1px dashed #3a5270}
+    .ai-launch{position:fixed;right:18px;bottom:18px;z-index:60;border:none;border-radius:999px;padding:14px 17px;background:var(--accent);color:#062313;font-weight:900;box-shadow:0 12px 35px rgba(0,0,0,.35);cursor:pointer}
+    .ai-panel{position:fixed;right:18px;bottom:80px;width:min(390px,calc(100vw - 24px));height:min(620px,78vh);z-index:70;background:#0e1828;border:1px solid #314967;border-radius:20px;box-shadow:0 24px 70px rgba(0,0,0,.55);display:none;overflow:hidden}
+    .ai-panel.open{display:flex;flex-direction:column}
+    .ai-head{padding:14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;background:#121f32}
+    .ai-messages{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
+    .ai-msg{max-width:88%;padding:10px 12px;border-radius:14px;line-height:1.45;font-size:14px}
+    .ai-msg.bot{align-self:flex-start;background:#17253a;border:1px solid #29415f}
+    .ai-msg.user{align-self:flex-end;background:rgba(87,211,140,.18);border:1px solid rgba(87,211,140,.35)}
+    .ai-input{padding:10px;border-top:1px solid var(--line);display:grid;grid-template-columns:1fr auto;gap:8px;background:#101a2b}
+    .ai-input input{margin:0}
+    .quick-prompts{display:flex;gap:6px;flex-wrap:wrap;padding:0 12px 10px}
+    .quick-prompts button{font-size:11px;padding:7px 9px;border-radius:999px;border:1px solid var(--line);background:var(--card2);color:var(--muted);cursor:pointer}
+    .session-log-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+    .session-log-grid input,.session-log-grid select{margin:0}
+    @media(max-width:760px){
+      .checkin-grid{grid-template-columns:repeat(2,1fr)}
+      .ai-panel{right:12px;bottom:74px}
+      .ai-launch{right:12px;bottom:12px}
+    }
+    @media(max-width:430px){
+      .checkin-grid{grid-template-columns:1fr 1fr}
+      .session-log-grid{grid-template-columns:1fr}
+    }
+
   </style>
 </head>
 <body>
@@ -236,7 +267,7 @@
     </div>
     <section class="hero">
       <div class="badge">⏱️ Rutinas de 45, 60, 75 o 90 minutos</div>
-      <h1>Gym Control Pareja V5.1</h1>
+      <h1>Gym Control Pareja V6 Coach</h1>
       <p id="heroGoal">Entrenamiento guiado con imágenes reales, registro de cargas y progreso controlado.</p>
       <div class="kpis">
         <div class="kpi"><span class="small">Racha</span><strong id="kpiStreak">0 días</strong></div>
@@ -287,6 +318,19 @@
         <div class="card half">
           <h2>Regla para subir peso</h2>
           <div class="success">Cuando complete todas las series con técnica limpia y todavía sienta que podría hacer 2 repeticiones más, suba entre 2,5% y 5% la próxima sesión.</div>
+        </div>
+        <div class="card">
+          <div class="row spread">
+            <div><h2>Check-in de hoy</h2><p class="small">La app adapta la recomendación según energía, sueño y molestias.</p></div>
+            <button class="btn btn-primary" onclick="saveCheckin()">Analizar día</button>
+          </div>
+          <div class="checkin-grid">
+            <div class="checkin-card"><label>Energía</label><select id="ciEnergy"><option value="5">Excelente</option><option value="4">Buena</option><option value="3" selected>Normal</option><option value="2">Baja</option><option value="1">Muy baja</option></select></div>
+            <div class="checkin-card"><label>Sueño</label><select id="ciSleep"><option value="5">Excelente</option><option value="4">Bueno</option><option value="3" selected>Regular</option><option value="2">Malo</option><option value="1">Muy malo</option></select></div>
+            <div class="checkin-card"><label>Dolor general (0–10)</label><input id="ciPain" type="number" min="0" max="10" value="0"></div>
+            <div class="checkin-card"><label>Rodilla (0–10)</label><input id="ciKnee" type="number" min="0" max="10" value="0"></div>
+          </div>
+          <div id="dailyRecommendation" class="recommendation"><strong>Coach:</strong> complete el check-in para recibir la recomendación del día.</div>
         </div>
         <div class="card">
           <div class="row spread">
@@ -486,6 +530,8 @@ Object.values(appData.profiles).forEach(p=>{
   p.workouts = p.workouts || [];
   p.weights = p.weights || {};
   p.goals = p.goals || {weight:'',waist:'',workouts:5,water:8};
+  p.checkins = p.checkins || {};
+  p.exerciseLogs = p.exerciseLogs || {};
 });
 // Persist only the migrated structure here. Do not call refresh before the app is initialized.
 localStorage.setItem('gymControlProfiles', JSON.stringify(appData));
@@ -807,16 +853,56 @@ function renderRoutine(){
         <div class="sets" style="grid-template-columns:repeat(${Math.min(effectiveSets,5)},1fr)">
           ${Array.from({length:effectiveSets},(_,s)=>`<input aria-label="Peso serie ${s+1}" type="number" step="0.5" placeholder="kg ${s+1}" value="${vals[s]||''}" id="w-${key}-${s}">`).join('')}
         </div>
-        <button class="btn btn-secondary" style="margin-top:8px;padding:8px 10px" onclick="saveExercise('${key}','${e[0].replaceAll("'","")}','${e[2]}',${effectiveSets})">Guardar pesos</button>
+        <div class="session-log-grid">
+          <input id="reps-${key}" type="number" min="1" max="50" placeholder="Reps reales">
+          <select id="rir-${key}"><option value="">Esfuerzo RIR</option><option value="4">Muy fácil (4+)</option><option value="3">Cómodo (3)</option><option value="2">Ideal (2)</option><option value="1">Difícil (1)</option><option value="0">Al fallo (0)</option></select>
+          <input id="pain-${key}" type="number" min="0" max="10" placeholder="Dolor 0–10">
+        </div>
+        <div class="alt-box"><strong>Alternativa:</strong> ${exerciseAlternative(e[0],activeProfile)}</div>
+        <button class="btn btn-secondary" style="margin-top:8px;padding:8px 10px" onclick="saveExercise('${key}','${e[0].replaceAll("'","")}','${e[2]}',${effectiveSets})">Guardar serie y analizar</button>
       </div>
     </div>`
   }).join('');
 }
+
+function exerciseAlternative(name,profile){
+  const n=name.toLowerCase();
+  if(n.includes('sentadilla')) return profile==='yuran' ? 'Prensa con rango corto o sentarse y levantarse de un banco alto, sin dolor.' : 'Prensa, hack squat o sentadilla goblet.';
+  if(n.includes('hip thrust')||n.includes('puente')) return 'Puente de glúteos en el suelo o máquina de glúteos.';
+  if(n.includes('peso muerto')) return 'Pull-through en polea o curl femoral.';
+  if(n.includes('press banca')||n.includes('pecho')) return 'Press en máquina o flexiones inclinadas.';
+  if(n.includes('remo')) return 'Remo sentado en polea o máquina con apoyo de pecho.';
+  if(n.includes('jalón')) return 'Dominada asistida o pullover en polea.';
+  if(n.includes('hombro')) return 'Press en máquina o elevación lateral ligera.';
+  if(n.includes('curl')) return 'Curl en polea o mancuernas sentado.';
+  if(n.includes('tríceps')) return 'Extensión en polea con cuerda o máquina.';
+  if(n.includes('abductor')) return 'Caminata lateral con banda o abducción acostada.';
+  return 'Use una máquina que trabaje el mismo músculo y permita movimiento sin dolor.';
+}
+
+function getExerciseAdvice(key){
+  const log=state.exerciseLogs?.[key];
+  if(!log)return 'Complete peso, repeticiones y esfuerzo para recibir una recomendación.';
+  if(Number(log.pain)>=5)return 'Baje el peso o cambie el ejercicio. Dolor de 5/10 o más no debe ignorarse.';
+  if(Number(log.rir)>=3)return 'La próxima sesión puede subir entre 2,5% y 5% si la técnica fue limpia.';
+  if(Number(log.rir)===2)return 'Peso adecuado. Manténgalo hasta completar todas las series con buena técnica.';
+  if(Number(log.rir)<=1)return 'Mantenga o reduzca ligeramente el peso. Evite entrenar al fallo de forma habitual.';
+  return 'Mantenga el peso y registre nuevamente la próxima sesión.';
+}
+
 function saveExercise(key,name,reps,totalSets){
   const vals=Array.from({length:totalSets},(_,s)=>document.getElementById(`w-${key}-${s}`)?.value||'').filter(v=>v!=='');
-  if(!vals.length) return alert('Digite al menos un peso.');
-  state.weights[key]={name,last:vals,updated:todayISO(),reps};
-  save(); alert('Pesos guardados.');
+  if(!vals.length){alert('Ingrese al menos un peso');return}
+  const actualReps=document.getElementById(`reps-${key}`)?.value||'';
+  const rir=document.getElementById(`rir-${key}`)?.value||'';
+  const pain=document.getElementById(`pain-${key}`)?.value||0;
+  state.weights[key]=state.weights[key]||{history:[]};
+  state.weights[key].last=vals;
+  state.weights[key].history.push({date:todayISO(),name,reps,values:vals});
+  state.exerciseLogs[key]={date:todayISO(),name,actualReps,rir,pain,values:vals};
+  save();
+  alert(`Guardado. Coach: ${getExerciseAdvice(key)}`);
+  renderWeightHistory();
 }
 function finishWorkout(){
   const day=+document.getElementById('daySelect').value;
@@ -851,6 +937,104 @@ function renderMeasurements(){
 function renderWeightHistory(){
   const arr=Object.values(state.weights).sort((a,b)=>b.updated.localeCompare(a.updated));
   document.getElementById('weightTable').innerHTML=arr.map(x=>`<tr><td>${x.updated}</td><td>${x.name}</td><td>${x.last.join(' / ')} kg</td><td>${x.reps}</td></tr>`).join('');
+}
+
+
+function saveCheckin(){
+  const data={
+    date:todayISO(),
+    energy:Number(document.getElementById('ciEnergy').value),
+    sleep:Number(document.getElementById('ciSleep').value),
+    pain:Number(document.getElementById('ciPain').value||0),
+    knee:Number(document.getElementById('ciKnee').value||0)
+  };
+  state.checkins[todayISO()]=data;
+  save();
+  renderDailyRecommendation();
+}
+function renderDailyRecommendation(){
+  const c=state.checkins?.[todayISO()];
+  const el=document.getElementById('dailyRecommendation');if(!el)return;
+  if(!c){el.innerHTML='<strong>Coach:</strong> complete el check-in para recibir la recomendación del día.';return}
+  let msg='';
+  if(c.knee>=7 || c.pain>=7){
+    msg='Hoy no recomiendo una sesión normal. Evite cargar la zona dolorida y considere valoración profesional si el dolor es nuevo, intenso o persiste.';
+    el.classList.add('pain-high');
+  }else if(c.knee>=4){
+    msg='Entrene, pero cambie ejercicios que carguen la rodilla, reduzca el rango y use 20–30% menos volumen en pierna.';
+    el.classList.add('pain-high');
+  }else if(c.energy<=2 || c.sleep<=2){
+    msg='Haga una sesión de 45–60 minutos, deje 3 repeticiones en reserva y no busque récords hoy.';
+    el.classList.remove('pain-high');
+  }else if(c.energy>=4 && c.sleep>=4 && c.pain<=2){
+    msg='Buen día para progresar. Puede intentar una pequeña subida de peso en el primer ejercicio si la técnica está sólida.';
+    el.classList.remove('pain-high');
+  }else{
+    msg='Sesión normal. Mantenga 2 repeticiones en reserva y priorice técnica.';
+    el.classList.remove('pain-high');
+  }
+  el.innerHTML=`<strong>Coach:</strong> ${msg}`;
+}
+
+function toggleAI(){
+  const p=document.getElementById('aiPanel');
+  p.classList.toggle('open');
+  if(p.classList.contains('open') && !document.getElementById('aiMessages').children.length){
+    addAIMessage(`Hola ${state.name}. Puedo orientarle usando su rutina, medidas, historial y check-in. No sustituyo a un médico o nutricionista.`);
+  }
+}
+function addAIMessage(text,user=false){
+  const box=document.getElementById('aiMessages');
+  const div=document.createElement('div');
+  div.className=`ai-msg ${user?'user':'bot'}`;
+  div.textContent=text;
+  box.appendChild(div);
+  box.scrollTop=box.scrollHeight;
+}
+function askQuick(text){document.getElementById('aiInput').value=text;sendAI()}
+function sendAI(){
+  const input=document.getElementById('aiInput');
+  const q=input.value.trim();if(!q)return;
+  addAIMessage(q,true);input.value='';
+  setTimeout(()=>addAIMessage(localCoachAnswer(q)),250);
+}
+function localCoachAnswer(question){
+  const q=question.toLowerCase();
+  const check=state.checkins?.[todayISO()];
+  const lastMeasure=[...(state.measurements||[])].sort((a,b)=>a.date.localeCompare(b.date)).at(-1);
+  const week=countThisWeek(state.workouts||[]);
+  const day=Math.min(new Date().getDay()===0?6:new Date().getDay()-1,4);
+  const routine=routines[day];
+
+  if(q.includes('rodilla')||q.includes('dolor')){
+    const knee=check?.knee??'sin registrar';
+    return `Su dolor de rodilla registrado hoy es ${knee}/10. Si está en 4–6, reduzca rango, carga y volumen; si llega a 7 o más, suspenda los ejercicios que provoquen dolor. No haga saltos ni sentadillas profundas.`;
+  }
+  if(q.includes('subir')&&q.includes('peso')){
+    const logs=Object.values(state.exerciseLogs||{}).sort((a,b)=>a.date.localeCompare(b.date));
+    const last=logs.at(-1);
+    return last ? `${last.name}: ${getExerciseAdvice(Object.keys(state.exerciseLogs).find(k=>state.exerciseLogs[k]===last))}` : 'Todavía no hay un registro completo. Guarde peso, repeticiones, RIR y dolor en un ejercicio para que pueda recomendarle.';
+  }
+  if(q.includes('entreno')||q.includes('rutina')||q.includes('hoy')){
+    const caution=check && (check.energy<=2||check.sleep<=2||check.knee>=4) ? 'Por su check-in, use la versión corta o reduzca intensidad.' : 'Puede hacer la sesión normal.';
+    return `Hoy corresponde ${routine.title}. Con ${selectedDuration} minutos, la app selecciona ${sessionPlan(selectedDuration,routine.exercises.length).count} ejercicios. ${caution}`;
+  }
+  if(q.includes('progreso')||q.includes('medida')||q.includes('peso actual')){
+    if(!lastMeasure)return `Tiene ${week} entrenamientos esta semana, pero aún no hay mediciones suficientes para evaluar la tendencia.`;
+    return `Última medición: ${lastMeasure.weight||'—'} kg y cintura ${lastMeasure.waist||'—'} cm. Lleva ${week} entrenamientos esta semana. Evalúe tendencias mensuales, no cambios diarios.`;
+  }
+  if(q.includes('comer')||q.includes('comida')||q.includes('aliment')){
+    const dayName=weekDays[day];
+    const plan=appData.sharedMealPlan?.[dayName];
+    return plan ? `Para ${dayName} planearon: ${plan}. Mantengan la misma preparación y ajusten las porciones individuales.` : `Para hoy usen una comida con proteína, vegetales y una porción moderada de carbohidrato. Pueden escribir el menú en el planificador compartido.`;
+  }
+  if(q.includes('descarga')||q.includes('cansado')||q.includes('fatiga')){
+    return 'Considere una semana de descarga cada 5–6 semanas o antes si baja el rendimiento, duerme mal y acumula molestias. Reduzca 30–40% las series y no entrene al fallo.';
+  }
+  if(q.includes('agua')){
+    return `Su objetivo guardado es ${state.goals?.water||8} vasos al día. Distribúyalos durante el día y aumente si hace calor o suda mucho.`;
+  }
+  return 'Puedo ayudarle con: rutina de hoy, dolor de rodilla, cuándo subir peso, progreso, alimentación, descanso y semana de descarga. Haga una pregunta concreta para darle una recomendación útil.';
 }
 
 function saveGoals(){
@@ -1045,5 +1229,25 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.register('./sw.js?v=5.1').then(reg=>reg.update()).catch(()=>{});
 }
 </script>
+  <button class="ai-launch" onclick="toggleAI()">🤖 Coach IA</button>
+  <aside class="ai-panel" id="aiPanel">
+    <div class="ai-head">
+      <div><strong>Coach IA local</strong><div class="small">Usa sus datos guardados en esta página</div></div>
+      <button class="btn btn-secondary" style="padding:7px 10px" onclick="toggleAI()">✕</button>
+    </div>
+    <div class="ai-messages" id="aiMessages"></div>
+    <div class="quick-prompts">
+      <button onclick="askQuick('¿Debo subir peso?')">¿Subo peso?</button>
+      <button onclick="askQuick('Me duele la rodilla')">Rodilla</button>
+      <button onclick="askQuick('¿Qué entreno hoy?')">Entreno de hoy</button>
+      <button onclick="askQuick('¿Cómo va mi progreso?')">Mi progreso</button>
+      <button onclick="askQuick('¿Qué puedo comer hoy?')">Comida</button>
+    </div>
+    <div class="ai-input">
+      <input id="aiInput" placeholder="Pregunte sobre entrenamiento, progreso o comida…" onkeydown="if(event.key==='Enter')sendAI()">
+      <button class="btn btn-primary" onclick="sendAI()">Enviar</button>
+    </div>
+  </aside>
+
 </body>
 </html>
