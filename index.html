@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#101827" />
   <link rel="manifest" href="manifest.json" />
-  <title>Gym Control Pareja V4</title>
+  <title>Gym Control Pareja V5</title>
   <style>
     :root{
       --bg:#0b1220; --card:#111c2e; --card2:#17243a; --text:#f6f7fb;
@@ -160,6 +160,51 @@
       .portion-grid,.shopping-grid{grid-template-columns:1fr}
     }
 
+    body{background:
+      radial-gradient(circle at 10% -10%,rgba(87,211,140,.13),transparent 28%),
+      radial-gradient(circle at 100% 10%,rgba(103,168,255,.12),transparent 25%),
+      var(--bg)}
+    .topbar{backdrop-filter:blur(14px);background:rgba(11,18,32,.82);position:sticky;top:0;z-index:30}
+    .hero{background:linear-gradient(135deg,rgba(87,211,140,.14),rgba(103,168,255,.08)),var(--card)}
+    .card{transition:transform .18s ease,border-color .18s ease}
+    .card:hover{border-color:#385272}
+    .metric-chart{width:100%;height:260px;background:#0d1727;border:1px solid var(--line);border-radius:16px;margin-top:12px}
+    .chart-controls{display:flex;gap:8px;flex-wrap:wrap}
+    .chart-chip{border:1px solid var(--line);background:var(--card2);color:var(--muted);border-radius:999px;padding:8px 12px;font-weight:800;cursor:pointer}
+    .chart-chip.active{color:#062313;background:var(--accent);border-color:var(--accent)}
+    .calendar-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+    .calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+    .calendar-dayname{text-align:center;font-size:11px;color:var(--muted);font-weight:800;padding:5px}
+    .calendar-day{min-height:56px;border:1px solid var(--line);border-radius:11px;padding:6px;background:#0d1727;font-size:12px}
+    .calendar-day.muted{opacity:.3}
+    .calendar-day.today{outline:2px solid var(--accent2)}
+    .calendar-day.done{background:rgba(87,211,140,.13);border-color:rgba(87,211,140,.45)}
+    .calendar-dot{display:block;margin-top:5px;font-size:10px;color:var(--accent)}
+    .goal-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+    .goal-card{background:#0d1727;border:1px solid var(--line);border-radius:14px;padding:12px}
+    .goal-card input{margin-top:7px}
+    .timer-box{position:sticky;top:74px;z-index:20;background:linear-gradient(135deg,#14233a,#101a2b);border:1px solid #365071;border-radius:18px;padding:14px;margin-bottom:14px;box-shadow:var(--shadow)}
+    .timer-display{font-size:40px;font-weight:900;letter-spacing:2px;font-variant-numeric:tabular-nums}
+    .timer-presets{display:flex;gap:7px;flex-wrap:wrap;margin:9px 0}
+    .timer-presets button{border:1px solid var(--line);background:var(--card2);color:var(--text);border-radius:10px;padding:8px 11px;cursor:pointer;font-weight:800}
+    .meal-editor{display:grid;grid-template-columns:90px 1fr;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+    .meal-editor textarea{min-height:54px;resize:vertical}
+    .check-list label{display:flex;gap:9px;align-items:flex-start;padding:7px 0;color:var(--muted)}
+    .check-list input{width:auto;margin-top:3px}
+    .mini-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+    .mini-stat{background:#0d1727;border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+    .mini-stat strong{display:block;font-size:18px}
+    @media(max-width:760px){
+      .goal-grid{grid-template-columns:repeat(2,1fr)}
+      .metric-chart{height:220px}
+      .timer-box{top:62px}
+    }
+    @media(max-width:430px){
+      .calendar-day{min-height:47px;padding:4px;font-size:11px}
+      .goal-grid,.mini-stats{grid-template-columns:1fr 1fr}
+      .timer-display{font-size:34px}
+    }
+
   </style>
 </head>
 <body>
@@ -191,7 +236,7 @@
     </div>
     <section class="hero">
       <div class="badge">⏱️ Rutinas de 45, 60, 75 o 90 minutos</div>
-      <h1>Gym Control Pareja</h1>
+      <h1>Gym Control Pareja V5</h1>
       <p id="heroGoal">Entrenamiento guiado con imágenes reales, registro de cargas y progreso controlado.</p>
       <div class="kpis">
         <div class="kpi"><span class="small">Racha</span><strong id="kpiStreak">0 días</strong></div>
@@ -243,11 +288,52 @@
           <h2>Regla para subir peso</h2>
           <div class="success">Cuando complete todas las series con técnica limpia y todavía sienta que podría hacer 2 repeticiones más, suba entre 2,5% y 5% la próxima sesión.</div>
         </div>
+        <div class="card">
+          <div class="row spread">
+            <div><h2>Objetivos personales</h2><p class="small">Se guardan por separado para Yurán y Ali.</p></div>
+            <button class="btn btn-secondary" onclick="saveGoals()">Guardar objetivos</button>
+          </div>
+          <div class="goal-grid">
+            <div class="goal-card"><label>Peso objetivo (kg)</label><input id="goalWeight" type="number" step="0.1" placeholder="75"></div>
+            <div class="goal-card"><label>Cintura objetivo (cm)</label><input id="goalWaist" type="number" step="0.1" placeholder="85"></div>
+            <div class="goal-card"><label>Entrenos por semana</label><input id="goalWorkouts" type="number" min="1" max="7" placeholder="5"></div>
+            <div class="goal-card"><label>Agua diaria (vasos)</label><input id="goalWater" type="number" min="1" max="20" placeholder="8"></div>
+          </div>
+          <div id="goalSummary" class="mini-stats"></div>
+        </div>
+        <div class="card half">
+          <div class="row spread"><h2>Calendario</h2><span class="pill" id="calendarMonth"></span></div>
+          <div class="calendar-grid" id="calendarGrid"></div>
+        </div>
+        <div class="card half">
+          <div class="row spread"><h2>Progreso visual</h2><div class="chart-controls">
+            <button class="chart-chip active" data-metric="weight" onclick="setChartMetric('weight')">Peso</button>
+            <button class="chart-chip" data-metric="waist" onclick="setChartMetric('waist')">Cintura</button>
+          </div></div>
+          <canvas id="progressChart" class="metric-chart"></canvas>
+          <p id="chartEmpty" class="small"></p>
+        </div>
       </div>
     </section>
 
     <section id="routine" class="tab">
       <div class="section-title"><h2>Rutina semanal</h2><span class="pill">Duración adaptable</span></div>
+      <div class="timer-box">
+        <div class="row spread">
+          <div><span class="small">Cronómetro de descanso</span><div id="timerDisplay" class="timer-display">01:30</div></div>
+          <span id="timerStatus" class="pill">Listo</span>
+        </div>
+        <div class="timer-presets">
+          <button onclick="setTimer(60)">60 s</button>
+          <button onclick="setTimer(90)">90 s</button>
+          <button onclick="setTimer(120)">120 s</button>
+          <button onclick="setTimer(180)">180 s</button>
+        </div>
+        <div class="row">
+          <button class="btn btn-primary" onclick="toggleTimer()" id="timerToggle">Iniciar</button>
+          <button class="btn btn-secondary" onclick="resetTimer()">Reiniciar</button>
+        </div>
+      </div>
       <div class="card">
         <div class="row">
           <select id="daySelect" onchange="renderRoutine()">
@@ -288,6 +374,15 @@
         <br><button class="btn btn-primary" onclick="addMeasurement()">Guardar medidas</button>
       </div>
       <div class="card">
+        <div class="row spread"><h3>Gráfica de evolución</h3><div class="chart-controls">
+          <button class="chart-chip active" data-progress-metric="weight" onclick="setProgressMetric('weight')">Peso</button>
+          <button class="chart-chip" data-progress-metric="waist" onclick="setProgressMetric('waist')">Cintura</button>
+          <button class="chart-chip" data-progress-metric="hip" onclick="setProgressMetric('hip')">Cadera</button>
+        </div></div>
+        <canvas id="detailChart" class="metric-chart"></canvas>
+        <p id="detailChartEmpty" class="small"></p>
+      </div>
+      <div class="card">
         <h3>Historial mensual</h3>
         <div class="scroll">
           <table>
@@ -317,6 +412,16 @@
       <div class="card">
         <div class="row spread"><h2>Lista de compras semanal</h2><span class="pill">Para ambos</span></div>
         <div id="shoppingList" class="shopping-grid"></div>
+      </div>
+      <div class="card">
+        <div class="row spread"><div><h2>Planificador compartido</h2><p class="small">Escriban lo que realmente cocinarán. Se guarda una sola vez para ambos.</p></div>
+          <button class="btn btn-primary" onclick="saveSharedMealPlan()">Guardar plan</button>
+        </div>
+        <div id="sharedMealEditor"></div>
+      </div>
+      <div class="card">
+        <div class="row spread"><h2>Compras realizadas</h2><button class="btn btn-secondary" onclick="clearShoppingChecks()">Limpiar marcas</button></div>
+        <div id="shoppingChecklist" class="check-list"></div>
       </div>
     </section>
 
@@ -366,6 +471,21 @@ const appData = JSON.parse(localStorage.getItem('gymControlProfiles') || `{
 let activeProfile = appData.activeProfile || 'yuran';
 let state = appData.profiles[activeProfile];
 let selectedDuration = Number(localStorage.getItem('gymSelectedDuration') || 60);
+let chartMetric='weight';
+let progressMetric='weight';
+let timerSeconds=90;
+let timerInitial=90;
+let timerInterval=null;
+let calendarCursor=new Date();
+const weekDays=['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+
+appData.sharedMealPlan = appData.sharedMealPlan || Object.fromEntries(weekDays.map(d=>[d,'']));
+appData.shoppingChecks = appData.shoppingChecks || {};
+Object.values(appData.profiles).forEach(p=>{
+  p.goals = p.goals || {weight:'',waist:'',workouts:5,water:8};
+});
+save();
+
 
 const IMG_BASE='https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/';
 
@@ -723,6 +843,128 @@ function renderWeightHistory(){
   const arr=Object.values(state.weights).sort((a,b)=>b.updated.localeCompare(a.updated));
   document.getElementById('weightTable').innerHTML=arr.map(x=>`<tr><td>${x.updated}</td><td>${x.name}</td><td>${x.last.join(' / ')} kg</td><td>${x.reps}</td></tr>`).join('');
 }
+
+function saveGoals(){
+  state.goals={
+    weight:document.getElementById('goalWeight').value,
+    waist:document.getElementById('goalWaist').value,
+    workouts:Number(document.getElementById('goalWorkouts').value||5),
+    water:Number(document.getElementById('goalWater').value||8)
+  };
+  save(); renderGoals(); alert('Objetivos guardados');
+}
+function renderGoals(){
+  const g=state.goals||{};
+  const ids={goalWeight:g.weight||'',goalWaist:g.waist||'',goalWorkouts:g.workouts||5,goalWater:g.water||8};
+  Object.entries(ids).forEach(([id,v])=>{const el=document.getElementById(id); if(el)el.value=v});
+  const last=[...(state.measurements||[])].sort((a,b)=>a.date.localeCompare(b.date)).at(-1)||{};
+  const week=countThisWeek(state.workouts||[]);
+  const weightTxt=g.weight && last.weight ? `${last.weight} → ${g.weight} kg` : (g.weight?`${g.weight} kg`:'Sin definir');
+  const waistTxt=g.waist && last.waist ? `${last.waist} → ${g.waist} cm` : (g.waist?`${g.waist} cm`:'Sin definir');
+  const el=document.getElementById('goalSummary');
+  if(el) el.innerHTML=`
+    <div class="mini-stat"><span class="small">Meta peso</span><strong>${weightTxt}</strong></div>
+    <div class="mini-stat"><span class="small">Meta cintura</span><strong>${waistTxt}</strong></div>
+    <div class="mini-stat"><span class="small">Semana</span><strong>${week}/${g.workouts||5}</strong></div>`;
+}
+
+function setTimer(seconds){
+  clearInterval(timerInterval); timerInterval=null;
+  timerSeconds=seconds; timerInitial=seconds; updateTimerUI();
+}
+function formatTimer(s){return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`}
+function updateTimerUI(){
+  const d=document.getElementById('timerDisplay'); if(d)d.textContent=formatTimer(timerSeconds);
+  const t=document.getElementById('timerToggle'); if(t)t.textContent=timerInterval?'Pausar':'Iniciar';
+  const st=document.getElementById('timerStatus');
+  if(st)st.textContent=timerSeconds===0?'Terminado':timerInterval?'Contando':'Listo';
+}
+function toggleTimer(){
+  if(timerInterval){clearInterval(timerInterval);timerInterval=null;updateTimerUI();return}
+  if(timerSeconds<=0)timerSeconds=timerInitial;
+  timerInterval=setInterval(()=>{
+    timerSeconds--;
+    updateTimerUI();
+    if(timerSeconds<=0){
+      clearInterval(timerInterval);timerInterval=null;updateTimerUI();
+      if(navigator.vibrate)navigator.vibrate([250,120,250]);
+      try{new Audio('data:audio/wav;base64,UklGRjQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YRAAAAAAAP//AAD//wAA//8AAP//').play()}catch(e){}
+    }
+  },1000);
+  updateTimerUI();
+}
+function resetTimer(){clearInterval(timerInterval);timerInterval=null;timerSeconds=timerInitial;updateTimerUI()}
+
+function drawLineChart(canvasId,emptyId,metric){
+  const canvas=document.getElementById(canvasId); if(!canvas)return;
+  const rows=[...(state.measurements||[])].filter(x=>x[metric]!=='' && x[metric]!=null).sort((a,b)=>a.date.localeCompare(b.date));
+  const empty=document.getElementById(emptyId);
+  const ratio=window.devicePixelRatio||1;
+  const width=canvas.clientWidth||600,height=canvas.clientHeight||250;
+  canvas.width=width*ratio;canvas.height=height*ratio;
+  const ctx=canvas.getContext('2d');ctx.scale(ratio,ratio);ctx.clearRect(0,0,width,height);
+  if(rows.length<2){
+    if(empty)empty.textContent='Agregue al menos dos mediciones para mostrar la tendencia.';
+    ctx.fillStyle='#9fb0c8';ctx.font='14px sans-serif';ctx.fillText('Todavía no hay suficientes datos',20,40);return;
+  }
+  if(empty)empty.textContent='';
+  const vals=rows.map(x=>Number(x[metric]));
+  let min=Math.min(...vals),max=Math.max(...vals);if(min===max){min-=1;max+=1}
+  const pad={l:45,r:18,t:25,b:38},cw=width-pad.l-pad.r,ch=height-pad.t-pad.b;
+  ctx.strokeStyle='#263750';ctx.lineWidth=1;
+  for(let i=0;i<5;i++){const y=pad.t+(ch*i/4);ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(width-pad.r,y);ctx.stroke()}
+  ctx.fillStyle='#9fb0c8';ctx.font='11px sans-serif';
+  for(let i=0;i<5;i++){const v=max-(max-min)*i/4;ctx.fillText(v.toFixed(1),5,pad.t+ch*i/4+4)}
+  const pts=rows.map((r,i)=>({x:pad.l+(cw*(i/(rows.length-1))),y:pad.t+ch*((max-Number(r[metric]))/(max-min)),r}));
+  const grad=ctx.createLinearGradient(0,pad.t,0,height-pad.b);grad.addColorStop(0,'rgba(87,211,140,.25)');grad.addColorStop(1,'rgba(87,211,140,0)');
+  ctx.beginPath();ctx.moveTo(pts[0].x,height-pad.b);pts.forEach(p=>ctx.lineTo(p.x,p.y));ctx.lineTo(pts.at(-1).x,height-pad.b);ctx.closePath();ctx.fillStyle=grad;ctx.fill();
+  ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.strokeStyle='#57d38c';ctx.lineWidth=3;ctx.stroke();
+  pts.forEach((p,i)=>{ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);ctx.fillStyle='#67a8ff';ctx.fill();
+    if(i===0||i===pts.length-1){ctx.fillStyle='#cbd8ea';ctx.fillText(p.r.date.slice(5),Math.max(4,p.x-15),height-14)}
+  });
+}
+function setChartMetric(metric){
+  chartMetric=metric;
+  document.querySelectorAll('[data-metric]').forEach(x=>x.classList.toggle('active',x.dataset.metric===metric));
+  drawLineChart('progressChart','chartEmpty',metric);
+}
+function setProgressMetric(metric){
+  progressMetric=metric;
+  document.querySelectorAll('[data-progress-metric]').forEach(x=>x.classList.toggle('active',x.dataset.progressMetric===metric));
+  drawLineChart('detailChart','detailChartEmpty',metric);
+}
+function renderCalendar(){
+  const grid=document.getElementById('calendarGrid');if(!grid)return;
+  const now=new Date(),y=now.getFullYear(),m=now.getMonth();
+  const first=new Date(y,m,1),last=new Date(y,m+1,0);
+  let start=(first.getDay()+6)%7;
+  document.getElementById('calendarMonth').textContent=first.toLocaleDateString('es-CR',{month:'long',year:'numeric'});
+  const done=new Set((state.workouts||[]).map(w=>w.date));
+  let out=['L','M','M','J','V','S','D'].map(x=>`<div class="calendar-dayname">${x}</div>`).join('');
+  for(let i=0;i<start;i++)out+='<div class="calendar-day muted"></div>';
+  for(let d=1;d<=last.getDate();d++){
+    const date=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday=date===todayISO(),isDone=done.has(date);
+    out+=`<div class="calendar-day ${isToday?'today':''} ${isDone?'done':''}"><strong>${d}</strong>${isDone?'<span class="calendar-dot">✓ Entreno</span>':''}</div>`;
+  }
+  grid.innerHTML=out;
+}
+
+function renderSharedMealEditor(){
+  const el=document.getElementById('sharedMealEditor');if(!el)return;
+  el.innerHTML=weekDays.map(d=>`<div class="meal-editor"><strong>${d}</strong><textarea id="plan-${d}" placeholder="Ej.: pollo, arroz, frijoles y ensalada">${appData.sharedMealPlan[d]||''}</textarea></div>`).join('');
+}
+function saveSharedMealPlan(){
+  weekDays.forEach(d=>appData.sharedMealPlan[d]=document.getElementById(`plan-${d}`).value.trim());
+  save();alert('Plan de comidas compartido guardado');
+}
+function renderShoppingChecklist(){
+  const el=document.getElementById('shoppingChecklist');if(!el)return;
+  const items=Object.values(shoppingList).flat();
+  el.innerHTML=items.map((item,i)=>`<label><input type="checkbox" ${appData.shoppingChecks[i]?'checked':''} onchange="toggleShopping(${i},this.checked)"><span>${item}</span></label>`).join('');
+}
+function toggleShopping(i,value){appData.shoppingChecks[i]=value;save()}
+function clearShoppingChecks(){appData.shoppingChecks={};save();renderShoppingChecklist()}
 function renderMeals(){
   document.getElementById('mealPlan').innerHTML=sharedMeals.map(day=>`<div class="meal-day">
     <h3>${day.day}</h3>
@@ -738,6 +980,8 @@ function renderMeals(){
   document.getElementById('shoppingList').innerHTML=Object.entries(shoppingList).map(([group,items])=>`
     <div class="shopping-box"><strong>${group}</strong><ul>${items.map(x=>`<li>${x}</li>`).join('')}</ul></div>
   `).join('');
+  renderSharedMealEditor();
+  renderShoppingChecklist();
 }
 function dashboard(){
   const jsDay=new Date().getDay();
@@ -779,12 +1023,14 @@ function importData(ev){
     routines=profileRoutines[activeProfile];
     localStorage.setItem('gymControlProfiles',JSON.stringify(appData));
     applyProfileUI();setDuration(selectedDuration);renderMeals();refresh();
+updateTimerUI();window.addEventListener('resize',()=>{drawLineChart('progressChart','chartEmpty',chartMetric);drawLineChart('detailChart','detailChartEmpty',progressMetric)});
     alert('Respaldo importado.');
   }catch(e){alert('Archivo inválido o de una versión anterior.')}};r.readAsText(f);
 }
 function resetData(){ if(confirm('Esto borrará todos los registros.')){localStorage.removeItem('gymControlProfiles');location.reload()} }
-function refresh(){dashboard();renderMeasurements();renderWeightHistory()}
+function refresh(){dashboard();renderMeasurements();renderWeightHistory();requestAnimationFrame(()=>{drawLineChart('detailChart','detailChartEmpty',progressMetric);drawLineChart('progressChart','chartEmpty',chartMetric)})}
 applyProfileUI();setDuration(selectedDuration);renderMeals();refresh();
+updateTimerUI();window.addEventListener('resize',()=>{drawLineChart('progressChart','chartEmpty',chartMetric);drawLineChart('detailChart','detailChartEmpty',progressMetric)});
 
 if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{});}
 </script>

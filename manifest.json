@@ -1,7 +1,8 @@
 {
-  "name": "Gym Control Pareja V4",
+  "name": "Gym Control Pareja V5",
   "short_name": "Gym Pareja",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#0b1220",
   "theme_color": "#101827",
