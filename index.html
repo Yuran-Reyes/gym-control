@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#101827" />
   <link rel="manifest" href="manifest.json" />
-  <title>Gym Control Pareja V8 Nutrición CR</title>
+  <title>Gym Control Pareja V8.1 Porciones</title>
   <style>
     :root{
       --bg:#0b1220; --card:#111c2e; --card2:#17243a; --text:#f6f7fb;
@@ -329,6 +329,22 @@
       .preference-grid{grid-template-columns:1fr}
     }
 
+    .portion-legend{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:12px 0}
+    .portion-person{background:#0d1727;border:1px solid var(--line);border-radius:14px;padding:12px}
+    .food-guide-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+    .guide-card{background:#0d1727;border:1px solid var(--line);border-radius:14px;padding:14px}
+    .guide-card h3{margin-top:0}
+    .flex-table{display:grid;gap:8px}
+    .flex-row{display:grid;grid-template-columns:1.2fr .8fr 1.5fr;gap:8px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:12px;background:#0d1727}
+    .drink-chip{display:inline-block;margin-top:7px;padding:5px 8px;border-radius:999px;background:rgba(103,168,255,.12);border:1px solid rgba(103,168,255,.25);font-size:12px}
+    .meat-examples{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .meat-item{padding:10px;border:1px solid var(--line);border-radius:12px;background:#101b2d}
+    @media(max-width:760px){
+      .portion-legend,.food-guide-grid{grid-template-columns:1fr}
+      .flex-row{grid-template-columns:1fr}
+      .meat-examples{grid-template-columns:1fr}
+    }
+
   </style>
 </head>
 <body>
@@ -360,7 +376,7 @@
     </div>
     <section class="hero">
       <div class="badge">⏱️ Rutinas de 45, 60, 75 o 90 minutos</div>
-      <h1>Gym Control Pareja V8 Nutrición CR</h1>
+      <h1>Gym Control Pareja V8.1 Porciones</h1>
       <p id="heroGoal">Entrenamiento guiado con imágenes reales, registro de cargas y progreso controlado.</p>
       <div class="kpis">
         <div class="kpi"><span class="small">Racha</span><strong id="kpiStreak">0 días</strong></div>
@@ -543,6 +559,45 @@
 <section id="meals" class="tab mobile-section">
   <div class="section-title">
     <div><h2>Comidas y compra quincenal</h2><p class="small">Plan compartido para Yurán y Ali, con porciones y preferencias individuales.</p></div>
+  </div>
+
+
+  <div class="card">
+    <h2>Porciones de referencia</h2>
+    <p class="small">Son cantidades iniciales prácticas. Se pueden ajustar según hambre, progreso, entrenamiento y medidas.</p>
+    <div class="portion-legend">
+      <div class="portion-person">
+        <strong>Yurán</strong>
+        <p>Proteína cocida: 150–180 g por comida principal<br>Arroz/pasta cocida: 150–200 g<br>Papa o yuca: 250–300 g<br>Vegetales: 1½–2 tazas</p>
+      </div>
+      <div class="portion-person">
+        <strong>Ali</strong>
+        <p>Proteína cocida: 110–140 g por comida principal<br>Arroz/pasta cocida: 100–150 g<br>Papa o yuca: 180–230 g<br>Vegetales: 1–1½ tazas</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>¿Qué significa carne magra?</h2>
+    <p class="small">Es carne con poca grasa visible. En el supermercado busque cortes sin grandes bordes blancos y retire la grasa antes de cocinar.</p>
+    <div class="meat-examples">
+      <div class="meat-item"><strong>Res</strong><br>Posta, lomo, lomito, mano de piedra, carne molida 90/10 o con poca grasa.</div>
+      <div class="meat-item"><strong>Pollo</strong><br>Pechuga o muslo sin piel. El muslo sirve, pero retire la piel y grasa visible.</div>
+      <div class="meat-item"><strong>Cerdo y pescado</strong><br>Lomo de cerdo, tilapia, corvina, atún en agua y otros pescados blancos.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Comidas flexibles y antojos</h2>
+    <p class="small">No están prohibidos. Lo importante es la frecuencia, la porción y que no desplacen la alimentación diaria.</p>
+    <div class="flex-table">
+      <div class="flex-row"><strong>🍔 Hamburguesa</strong><span>1 vez por semana</span><span>Una hamburguesa sencilla; agregue ensalada o comparta las papas.</span></div>
+      <div class="flex-row"><strong>🍕 Pizza</strong><span>Cada 7–10 días</span><span>2–3 porciones con ensalada o proteína; evite convertirla en “día libre” completo.</span></div>
+      <div class="flex-row"><strong>🍟 Papas fritas</strong><span>1 vez por semana</span><span>Porción pequeña o compartida, idealmente junto a proteína.</span></div>
+      <div class="flex-row"><strong>🥤 Coca-Cola regular</strong><span>Máximo 1–2 veces por semana</span><span>Una lata pequeña o vaso; el agua sigue siendo la bebida principal.</span></div>
+      <div class="flex-row"><strong>🥤 Coca-Cola Zero</strong><span>Ocasional</span><span>Puede ayudar a reducir azúcar, pero no debe reemplazar el agua durante todo el día.</span></div>
+      <div class="flex-row"><strong>🍰 Postre</strong><span>1–2 veces por semana</span><span>Porción individual, preferiblemente después de una comida y no como picoteo continuo.</span></div>
+    </div>
   </div>
 
   <div class="card meal-adapter">
@@ -1377,15 +1432,52 @@ const fortnightShoppingTemplate = [
   {cat:'Extras',name:'Mantequilla de maní',qty:'1 frasco',store:'Walmart'},
   {cat:'Extras',name:'Aceite',qty:'1 botella',store:'Maxi Palí'},
   {cat:'Extras',name:'Ajo, sal, pimienta y condimentos',qty:'Reposición',store:'Maxi Palí'},
-  {cat:'Extras',name:'Café',qty:'1 paquete',store:'Maxi Palí'}
+  {cat:'Bebidas',name:'Café',qty:'1 paquete',store:'Maxi Palí'},
+  {cat:'Bebidas',name:'Limones o hierbabuena para agua',qty:'1 reposición semanal',store:'Feria / Maxi Palí'},
+  {cat:'Bebidas',name:'Coca-Cola Zero o bebida sin azúcar (opcional)',qty:'1 paquete pequeño',store:'Walmart'}
 ];
 
 const mealBase = [
-  {b:'Gallo pinto con huevo y fruta',l:'Pollo con arroz, frijoles y ensalada',d:'Tortilla con pollo, vegetales y queso'},
-  {b:'Avena con banano y mantequilla de maní',l:'Carne molida con papa y ensalada',d:'Atún con arroz y vegetales'},
-  {b:'Huevos con tortilla y fruta',l:'Pescado con papa y ensalada',d:'Sopa de pollo con vegetales'},
-  {b:'Pan integral con huevo y fruta',l:'Casado de pollo con arroz y frijoles',d:'Carne molida con vegetales'},
-  {b:'Gallo pinto con queso y huevo',l:'Atún con pasta o arroz y ensalada',d:'Tortilla con huevo y vegetales'}
+  {
+    b:'Gallo pinto: Yurán 1½ tazas + 2 huevos; Ali 1 taza + 1–2 huevos. Fruta: 1 porción.',
+    bd:'Café sin exceso de azúcar + 300–500 ml de agua.',
+    l:'Pollo: Yurán 170 g / Ali 130 g. Arroz: Yurán 180 g / Ali 120 g. Frijoles: ½ taza cada uno. Ensalada: 1–2 tazas.',
+    ld:'Agua, agua con limón sin azúcar o fresco natural sin azúcar.',
+    d:'Tortillas: Yurán 3 / Ali 2. Pollo: Yurán 150 g / Ali 110 g. Vegetales y 30–40 g de queso.',
+    dd:'Agua o té frío sin azúcar.'
+  },
+  {
+    b:'Avena seca: Yurán 70 g / Ali 50 g. Banano: 1 cada uno. Mantequilla de maní: Yurán 1 cucharada / Ali 2 cucharaditas.',
+    bd:'Leche según preferencia o agua; además 300 ml de agua.',
+    l:'Carne molida 90/10: Yurán 170 g / Ali 130 g. Papa: Yurán 280 g / Ali 200 g. Ensalada.',
+    ld:'Agua con hielo, limón o hierbabuena.',
+    d:'Atún en agua: Yurán 1½ latas / Ali 1 lata. Arroz: Yurán 150 g / Ali 100 g. Vegetales.',
+    dd:'Agua o bebida sin azúcar.'
+  },
+  {
+    b:'Huevos: Yurán 3 / Ali 2. Tortillas: Yurán 3 / Ali 2. Fruta: 1 porción cada uno.',
+    bd:'Café o té y 300–500 ml de agua.',
+    l:'Tilapia o pescado: Yurán 180 g / Ali 140 g. Papa: Yurán 250 g / Ali 180 g. Ensalada.',
+    ld:'Agua o agua con limón sin azúcar.',
+    d:'Sopa de pollo: Yurán 150 g / Ali 110 g de pollo, abundantes vegetales y una porción pequeña de papa.',
+    dd:'Agua; evite acompañarla con refresco azucarado.'
+  },
+  {
+    b:'Pan integral: Yurán 3 rebanadas / Ali 2. Huevos: Yurán 2 / Ali 1–2. Fruta.',
+    bd:'Café con poca azúcar o sin azúcar + agua.',
+    l:'Casado: pollo Yurán 170 g / Ali 130 g; arroz 150/100 g; frijoles ½ taza; ensalada abundante.',
+    ld:'Agua, fresco natural diluido sin azúcar o gaseosa Zero ocasional.',
+    d:'Carne magra: Yurán 150 g / Ali 110 g. Vegetales 1–2 tazas y tortillas 2/1.',
+    dd:'Agua o té.'
+  },
+  {
+    b:'Gallo pinto: Yurán 1½ tazas / Ali 1 taza. Queso: 40/30 g. Huevos: 2/1–2.',
+    bd:'Café y agua.',
+    l:'Atún: Yurán 1½ latas / Ali 1 lata. Pasta cocida: 180/120 g. Ensalada.',
+    ld:'Agua fría o agua con frutas sin azúcar.',
+    d:'Tortillas: 3/2. Huevos: 3/2. Vegetales salteados y aguacate ¼/⅛ unidad.',
+    dd:'Agua o infusión sin azúcar.'
+  }
 ];
 
 function saveFoodPreferences(){
@@ -1504,9 +1596,12 @@ function generateFortnightMeals(){
     meals.push({
       day:i+1,
       breakfastY:adaptMealForPreferences(base.b,'yuran'),
-      breakfastA:adaptMealForPreferences(i%3===1 && appData.foodPreferences.ali.yogurt?'Yogurt con fruta y avena':base.b,'ali'),
-      lunch:base.l,
-      dinner:base.d
+      breakfastA:adaptMealForPreferences(i%3===1 && appData.foodPreferences.ali.yogurt?'Yogurt para Ali: 200 g + 40 g de avena + 1 porción de fruta.':base.b,'ali'),
+      breakfastDrink:base.bd,
+      lunch:adaptMealForPreferences(base.l,'yuran'),
+      lunchDrink:base.ld,
+      dinner:adaptMealForPreferences(base.d,'yuran'),
+      dinnerDrink:base.dd
     });
   }
   appData.fortnightMeals=meals;
@@ -1516,15 +1611,18 @@ function generateFortnightMeals(){
 
 function renderFortnightMeals(){
   const box=document.getElementById('fortnightMeals');if(!box)return;
-  if(!appData.fortnightMeals.length)generateFortnightMeals();
+  if(!appData.fortnightMeals.length || !appData.fortnightMeals[0]?.breakfastDrink){
+    generateFortnightMeals();
+    return;
+  }
   box.innerHTML=appData.fortnightMeals.map(m=>`
     <div class="meal-day">
       <h3>Día ${m.day}</h3>
       <div class="meal-grid">
-        <div class="meal-slot"><strong>Desayuno Yurán</strong>${m.breakfastY}</div>
-        <div class="meal-slot"><strong>Desayuno Ali</strong>${m.breakfastA}</div>
-        <div class="meal-slot"><strong>Almuerzo compartido</strong>${m.lunch}</div>
-        <div class="meal-slot"><strong>Cena compartida</strong>${m.dinner}</div>
+        <div class="meal-slot"><strong>Desayuno Yurán</strong>${m.breakfastY}<span class="drink-chip">🥤 ${m.breakfastDrink||'Agua y café sin exceso de azúcar'}</span></div>
+        <div class="meal-slot"><strong>Desayuno Ali</strong>${m.breakfastA}<span class="drink-chip">🥤 ${m.breakfastDrink||'Agua y café sin exceso de azúcar'}</span></div>
+        <div class="meal-slot"><strong>Almuerzo compartido</strong>${m.lunch}<span class="drink-chip">🥤 ${m.lunchDrink||'Agua'}</span></div>
+        <div class="meal-slot"><strong>Cena compartida</strong>${m.dinner}<span class="drink-chip">🥤 ${m.dinnerDrink||'Agua'}</span></div>
       </div>
     </div>`).join('');
 }
