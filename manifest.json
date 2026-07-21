@@ -1,7 +1,7 @@
 {
-  "name": "Gym Control Pareja V7.1 Mobile",
+  "name": "Gym Control Pareja V8 Nutrición CR",
   "short_name": "Gym Pareja",
-  "start_url": "./index.html?v=71",
+  "start_url": "./index.html?v=8",
   "scope": "./",
   "display": "standalone",
   "background_color": "#0b1220",
