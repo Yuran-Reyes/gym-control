@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#101827" />
   <link rel="manifest" href="manifest.json" />
-  <title>Gym Control Pareja V8.1 Porciones</title>
+  <title>Gym Control Pareja V9 Coach Automático</title>
   <style>
     :root{
       --bg:#0b1220; --card:#111c2e; --card2:#17243a; --text:#f6f7fb;
@@ -345,6 +345,17 @@
       .meat-examples{grid-template-columns:1fr}
     }
 
+    .coach-dashboard{background:linear-gradient(135deg,rgba(103,168,255,.14),rgba(87,211,140,.10));border:1px solid rgba(103,168,255,.30)}
+    .coach-decision{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:flex-start;padding:12px;border-radius:14px;background:#0d1727;border:1px solid var(--line);margin-top:10px}
+    .coach-icon{font-size:26px}.coach-decision h3{margin:0 0 5px}
+    .coach-tag{display:inline-flex;padding:5px 9px;border-radius:999px;font-size:12px;background:#17253a;margin:5px 5px 0 0}
+    .today-plan{display:grid;gap:10px}.today-exercise{display:grid;grid-template-columns:1fr auto;gap:10px;padding:12px;border-radius:13px;background:#0d1727;border:1px solid var(--line)}
+    .today-exercise strong{display:block}.decision-up{border-color:rgba(87,211,140,.45)}.decision-hold{border-color:rgba(255,193,92,.35)}
+    .decision-down{border-color:rgba(255,105,120,.40)}.decision-swap{border-color:rgba(164,127,255,.40)}
+    .coach-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+    .coach-metric{padding:10px;border-radius:12px;background:#0d1727;border:1px solid var(--line)}.coach-metric strong{font-size:20px;display:block}
+    .auto-note{font-size:12px;color:var(--muted);margin-top:6px}
+    @media(max-width:760px){.coach-metrics{grid-template-columns:repeat(2,1fr)}.today-exercise{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
@@ -376,7 +387,7 @@
     </div>
     <section class="hero">
       <div class="badge">⏱️ Rutinas de 45, 60, 75 o 90 minutos</div>
-      <h1>Gym Control Pareja V8.1 Porciones</h1>
+      <h1>Gym Control Pareja V9 Coach Automático</h1>
       <p id="heroGoal">Entrenamiento guiado con imágenes reales, registro de cargas y progreso controlado.</p>
       <div class="kpis">
         <div class="kpi"><span class="small">Racha</span><strong id="kpiStreak">0 días</strong></div>
@@ -387,6 +398,20 @@
     </section>
 
     <section id="dashboard" class="tab active">
+  <div class="card coach-dashboard">
+    <div class="row spread">
+      <div><span class="eyebrow">COACH AUTOMÁTICO</span><h2 id="coachGreeting">Analizando su día...</h2><p class="small" id="coachSummary">Preparando recomendaciones.</p></div>
+      <button class="btn btn-primary" onclick="showPage('routine')">Ver entrenamiento</button>
+    </div>
+    <div class="coach-metrics">
+      <div class="coach-metric">Preparación<strong id="readinessScore">—</strong><span class="small">de 100</span></div>
+      <div class="coach-metric">Racha<strong id="trainingStreak">0</strong><span class="small">días</span></div>
+      <div class="coach-metric">Progresiones<strong id="progressionCount">0</strong><span class="small">hoy</span></div>
+      <div class="coach-metric">Alertas<strong id="coachAlertCount">0</strong><span class="small">activas</span></div>
+    </div>
+    <div id="coachDecisions"></div>
+    <p class="auto-note">Usa sueño, energía, dolor, cargas, repeticiones y dificultad. Mientras más registren, mejor decidirá.</p>
+  </div>
       <div class="grid">
         <div class="card half">
           <h2>Entrenamiento de hoy</h2>
@@ -470,6 +495,13 @@
     </section>
 
     <section id="routine" class="tab">
+  <div class="card coach-dashboard">
+    <div class="row spread">
+      <div><span class="eyebrow">PLAN AUTOMÁTICO DE HOY</span><h2 id="todayCoachTitle">Preparando entrenamiento...</h2></div>
+      <button class="btn btn-secondary" onclick="recalculateCoach()">Actualizar</button>
+    </div>
+    <div id="todayCoachPlan" class="today-plan"></div>
+  </div>
       <div class="section-title"><h2>Rutina semanal</h2><span class="pill">Duración adaptable</span></div>
       <div class="timer-box">
         <div class="row spread">
@@ -726,6 +758,7 @@ appData.foodPreferences = appData.foodPreferences || {
 appData.shoppingSettings = appData.shoppingSettings || {mainStore:'Maxi Palí',budget:''};
 appData.fortnightShopping = appData.fortnightShopping || [];
 appData.fortnightMeals = appData.fortnightMeals || [];
+appData.coach = appData.coach || {decisions:[],insights:[],lastCalculated:null,weeklyProgressions:0};
 
 // Persist only the migrated structure here. Do not call refresh before the app is initialized.
 localStorage.setItem('gymControlProfiles', JSON.stringify(appData));
@@ -1684,6 +1717,63 @@ updateTimerUI();window.addEventListener('resize',()=>{drawLineChart('progressCha
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('./sw.js?v=5.1').then(reg=>reg.update()).catch(()=>{});
 }
+
+function coachProfile(){return appData.profiles[appData.activeProfile]||appData.profiles.yuran}
+function coachCheckin(p){const e=Object.entries(p.checkins||{}).sort((a,b)=>b[0].localeCompare(a[0]));return e[0]?.[1]||{energy:3,sleep:7,pain:0,knee:0}}
+function coachRir(log){if(log.rir!==undefined&&log.rir!=='')return Number(log.rir);const t=String(log.difficulty||log.effort||'').toLowerCase();if(t.includes('fácil')||t.includes('facil'))return 3;if(t.includes('bien'))return 2;if(t.includes('pesado'))return 1;if(t.includes('límite')||t.includes('limite'))return 0;return 2}
+function readiness(p){const c=coachCheckin(p);let s=70;s+=(Number(c.sleep||7)-7)*7;s+=(Number(c.energy||3)-3)*8;s-=Number(c.pain||0)*8;s-=Number(c.knee||0)*10;return Math.max(20,Math.min(100,Math.round(s)))}
+function exerciseHistory(p,name){const x=p.exerciseLogs?.[name]||[];return (Array.isArray(x)?x:Object.values(x)).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')))}
+function exerciseDecision(p,name){
+  const h=exerciseHistory(p,name).slice(0,4);
+  if(!h.length)return {action:'hold',icon:'🎯',label:'Peso inicial',text:'Use una carga cómoda que deje 2–3 repeticiones en reserva.'};
+  const a=h[0],w=Number(a.weight||a.load||0),r=Number(a.reps||0),rir=coachRir(a),pain=Number(a.pain||0);
+  if(pain>=2)return {action:'swap',icon:'🔄',label:'Sustituir',weight:w,text:'Hubo dolor. Use una alternativa sin dolor y reduzca rango o carga.'};
+  if(h.length>1){
+    const b=h[1],bw=Number(b.weight||b.load||0),br=Number(b.reps||0),brir=coachRir(b);
+    if(w===bw&&r>=10&&br>=10&&rir>=2&&brir>=2){const j=w>=50?2.5:1;return {action:'up',icon:'⬆️',label:'Subir peso',weight:w+j,text:`Dominó ${w} kg dos veces. Pruebe ${w+j} kg con buena técnica.`}}
+    if(rir<=0||r<6){const nw=Math.max(0,Math.round(w*.95*2)/2);return {action:'down',icon:'⬇️',label:'Bajar',weight:nw,text:`La última sesión quedó al límite. Use cerca de ${nw} kg.`}}
+    if(w===bw&&Math.abs(r-br)<=1&&rir<=1&&brir<=1)return {action:'hold',icon:'⏸️',label:'Mantener',weight:w,text:`Mantenga ${w} kg y busque una repetición más antes de subir.`}
+  }
+  if(rir>=3&&r>=10){const j=w>=50?2.5:1;return {action:'up',icon:'⬆️',label:'Subir peso',weight:w+j,text:`La carga quedó cómoda. Pruebe ${w+j} kg.`}}
+  return {action:'hold',icon:'⏸️',label:'Mantener',weight:w,text:`Mantenga ${w||'la misma carga'} y mejore técnica o repeticiones.`}
+}
+function coachInsights(p){
+  const out=[],score=readiness(p),c=coachCheckin(p);
+  if(score<55)out.push({type:'down',icon:'🛌',title:'Sesión más ligera',text:'Reduzca una serie por ejercicio y evite llegar al fallo.'});
+  else if(score>=85)out.push({type:'up',icon:'🔥',title:'Buen día para progresar',text:'La recuperación está alta. Puede intentar las progresiones sugeridas.'});
+  if(Number(c.knee||0)>=2)out.push({type:'swap',icon:'🦵',title:'Proteja la rodilla',text:'Evite impacto, flexión profunda dolorosa y cualquier ejercicio que aumente la molestia.'});
+  if(!Object.keys(p.exerciseLogs||{}).length)out.push({type:'hold',icon:'📊',title:'El coach empezará a aprender',text:'Registre peso, repeticiones y dificultad. Con dos o tres sesiones podrá ajustar mejor.'});
+  return out.slice(0,4)
+}
+function streak(p){const d=[...new Set((p.workouts||[]).map(x=>String(x.date||'').slice(0,10)).filter(Boolean))].sort().reverse();if(!d.length)return 0;let n=0,x=new Date();for(let i=0;i<14;i++){const k=x.toISOString().slice(0,10);if(d.includes(k))n++;else if(n)break;x.setDate(x.getDate()-1)}return n}
+function todayExercises(){
+  const days=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'],day=days[new Date().getDay()];
+  const cards=[...document.querySelectorAll('#routine [data-day],#routine .day-card,#routine .workout-day')];
+  const card=cards.find(x=>(x.dataset.day||x.textContent||'').toLowerCase().includes(day));
+  if(!card)return [];
+  return [...new Set([...card.querySelectorAll('[data-exercise],h3,h4,strong')].map(x=>(x.dataset.exercise||x.textContent).trim()).filter(x=>x.length>2))].slice(0,8)
+}
+function recalculateCoach(){
+  const p=coachProfile(),names=todayExercises(),decisions=names.map(exercise=>({exercise,...exerciseDecision(p,exercise)}));
+  appData.coach={decisions,insights:coachInsights(p),lastCalculated:new Date().toISOString(),weeklyProgressions:decisions.filter(x=>x.action==='up').length};
+  save();renderAutomaticCoach()
+}
+function renderAutomaticCoach(){
+  const p=coachProfile(),c=appData.coach||{},score=readiness(p);
+  if(!c.lastCalculated){recalculateCoach();return}
+  const name=p.name||(appData.activeProfile==='ali'?'Ali':'Yurán'),h=new Date().getHours(),g=h<12?'Buenos días':h<18?'Buenas tardes':'Buenas noches';
+  document.getElementById('coachGreeting')&&(document.getElementById('coachGreeting').textContent=`${g}, ${name}.`);
+  document.getElementById('coachSummary')&&(document.getElementById('coachSummary').textContent=score>=85?'Está bien recuperado. Hoy podemos buscar progreso.':score>=65?'Está en condiciones normales. Siga el plan.':'Hoy priorice recuperación, técnica y control.');
+  document.getElementById('readinessScore')&&(document.getElementById('readinessScore').textContent=score);
+  document.getElementById('trainingStreak')&&(document.getElementById('trainingStreak').textContent=streak(p));
+  document.getElementById('progressionCount')&&(document.getElementById('progressionCount').textContent=c.weeklyProgressions||0);
+  document.getElementById('coachAlertCount')&&(document.getElementById('coachAlertCount').textContent=(c.insights||[]).filter(x=>x.type==='down'||x.type==='swap').length);
+  const box=document.getElementById('coachDecisions');if(box)box.innerHTML=(c.insights||[]).map(i=>`<div class="coach-decision decision-${i.type}"><div class="coach-icon">${i.icon}</div><div><h3>${i.title}</h3><p>${i.text}</p></div></div>`).join('');
+  const title=document.getElementById('todayCoachTitle');if(title)title.textContent=c.decisions?.length?'Cargas recomendadas automáticamente':'Registre sus primeras sesiones';
+  const plan=document.getElementById('todayCoachPlan');if(plan)plan.innerHTML=(c.decisions||[]).map(d=>`<div class="today-exercise decision-${d.action}"><div><strong>${d.exercise}</strong><span class="coach-tag">${d.icon} ${d.label}</span><p class="small">${d.text}</p></div><div>${d.weight?`<strong>${d.weight} kg</strong>`:''}</div></div>`).join('')||'<p class="small">El coach necesita registros para personalizar cargas y ejercicios.</p>'
+}
+document.addEventListener('DOMContentLoaded',()=>setTimeout(recalculateCoach,300));
+
 </script>
   <button class="ai-launch" onclick="toggleAI()">🤖 Coach IA</button>
   <aside class="ai-panel" id="aiPanel">
