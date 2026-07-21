@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#101827" />
   <link rel="manifest" href="manifest.json" />
-  <title>Gym Control Pareja V6 Coach</title>
+  <title>Gym Control Pareja V7 Mobile</title>
   <style>
     :root{
       --bg:#0b1220; --card:#111c2e; --card2:#17243a; --text:#f6f7fb;
@@ -236,6 +236,75 @@
       .session-log-grid{grid-template-columns:1fr}
     }
 
+    :root{
+      --nav-h:72px;
+    }
+    body{padding-bottom:calc(var(--nav-h) + 24px)}
+    .container{max-width:1120px}
+    .topbar{padding:10px 0}
+    .topbar .container{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .hero{padding:22px;border-radius:24px;overflow:hidden;position:relative}
+    .hero:after{content:"";position:absolute;width:190px;height:190px;border-radius:50%;right:-70px;top:-65px;background:rgba(87,211,140,.13)}
+    .hero h1{font-size:clamp(30px,5vw,48px);line-height:1.03;margin:10px 0}
+    .hero p{font-size:clamp(16px,2vw,20px);max-width:620px;margin:0 0 16px}
+    .dashboard-grid{gap:14px}
+    .metrics{gap:10px}
+    .metric{padding:14px;min-height:104px}
+    .metric strong{font-size:30px}
+    .quick-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+    .quick-action{border:1px solid var(--line);background:#0d1727;color:var(--text);border-radius:16px;padding:14px 10px;text-align:center;font-weight:800;cursor:pointer}
+    .quick-action span{display:block;font-size:23px;margin-bottom:5px}
+    .today-card{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}
+    .start-workout-btn{min-width:150px}
+    .bottom-nav{
+      position:fixed;left:50%;transform:translateX(-50%);bottom:10px;
+      width:min(720px,calc(100vw - 18px));height:var(--nav-h);
+      background:rgba(13,23,39,.96);backdrop-filter:blur(18px);
+      border:1px solid #2a405d;border-radius:22px;z-index:80;
+      display:grid;grid-template-columns:repeat(5,1fr);padding:7px;
+      box-shadow:0 18px 50px rgba(0,0,0,.45)
+    }
+    .bottom-nav button{
+      border:none;background:transparent;color:var(--muted);font-weight:800;
+      border-radius:15px;display:flex;flex-direction:column;align-items:center;
+      justify-content:center;gap:3px;font-size:11px;cursor:pointer
+    }
+    .bottom-nav button .nav-icon{font-size:22px;line-height:1}
+    .bottom-nav button.active{background:#192840;color:#fff}
+    .bottom-nav button.coach-tab{color:#8cf1b5}
+    .bottom-nav button.coach-tab.active{background:var(--accent);color:#062313}
+    .ai-launch{display:none!important}
+    .ai-panel{
+      position:fixed;inset:auto 50% calc(var(--nav-h) + 20px) auto;
+      transform:translateX(50%);width:min(720px,calc(100vw - 18px));
+      height:min(650px,calc(100vh - var(--nav-h) - 50px));
+      border-radius:24px;right:auto;bottom:calc(var(--nav-h) + 18px)
+    }
+    .ai-panel.open{display:flex}
+    .section-title h2,.card h2{font-size:clamp(22px,3vw,30px)}
+    .mobile-section{scroll-margin-top:88px}
+    @media(max-width:760px){
+      .container{padding-left:14px;padding-right:14px}
+      .hero{padding:20px}
+      .hero h1{font-size:38px}
+      .metrics{grid-template-columns:repeat(2,1fr)}
+      .quick-actions{grid-template-columns:repeat(2,1fr)}
+      .today-card{grid-template-columns:1fr}
+      .start-workout-btn{width:100%}
+      .topbar .badge{font-size:13px}
+    }
+    @media(max-width:430px){
+      :root{--nav-h:68px}
+      .hero h1{font-size:34px}
+      .hero p{font-size:17px}
+      .metric{min-height:92px;padding:12px}
+      .metric strong{font-size:27px}
+      .bottom-nav{bottom:7px}
+      .bottom-nav button{font-size:10px}
+      .bottom-nav button .nav-icon{font-size:20px}
+      .ai-panel{bottom:calc(var(--nav-h) + 14px);height:calc(100vh - var(--nav-h) - 32px)}
+    }
+
   </style>
 </head>
 <body>
@@ -267,7 +336,7 @@
     </div>
     <section class="hero">
       <div class="badge">⏱️ Rutinas de 45, 60, 75 o 90 minutos</div>
-      <h1>Gym Control Pareja V6 Coach</h1>
+      <h1>Gym Control Pareja V7 Mobile</h1>
       <p id="heroGoal">Entrenamiento guiado con imágenes reales, registro de cargas y progreso controlado.</p>
       <div class="kpis">
         <div class="kpi"><span class="small">Racha</span><strong id="kpiStreak">0 días</strong></div>
@@ -751,6 +820,7 @@ function switchProfile(){
   document.getElementById('profileOverlay').classList.remove('hidden');
 }
 function applyProfileUI(){
+  updateGreeting();
   const p=appData.profiles[activeProfile];
   document.getElementById('profileEmoji').textContent=p.emoji;
   document.getElementById('profileLabel').textContent=p.name;
@@ -976,11 +1046,54 @@ function renderDailyRecommendation(){
   el.innerHTML=`<strong>Coach:</strong> ${msg}`;
 }
 
+
+function updateGreeting(){
+  const h=new Date().getHours();
+  const greeting=h<12?'Buenos días':h<18?'Buenas tardes':'Buenas noches';
+  const el=document.getElementById('greetingTitle');
+  if(el)el.textContent=`${greeting}, ${state.name}`;
+}
+function setActiveNav(name){
+  document.querySelectorAll('.bottom-nav button').forEach(b=>b.classList.remove('active'));
+  const btn=document.getElementById(`nav-${name}`);
+  if(btn)btn.classList.add('active');
+}
+function showPage(name){
+  const ai=document.getElementById('aiPanel');if(ai)ai.classList.remove('open');
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  if(name==='home'){
+    const home=document.getElementById('home');
+    if(home)home.classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
+  }else{
+    const page=document.getElementById(name);
+    if(page)page.classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  setActiveNav(name);
+}
+function goToSection(name){showPage(name)}
+function openCoachTab(){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  const p=document.getElementById('aiPanel');
+  p.classList.add('open');
+  setActiveNav('coach');
+  if(!document.getElementById('aiMessages').children.length){
+    addAIMessage(`Hola ${state.name}. Puedo orientarle usando su rutina, medidas, historial y check-in. No sustituyo a un médico o nutricionista.`);
+  }
+}
+
 function toggleAI(){
   const p=document.getElementById('aiPanel');
+  const opening=!p.classList.contains('open');
   p.classList.toggle('open');
-  if(p.classList.contains('open') && !document.getElementById('aiMessages').children.length){
-    addAIMessage(`Hola ${state.name}. Puedo orientarle usando su rutina, medidas, historial y check-in. No sustituyo a un médico o nutricionista.`);
+  if(opening){
+    setActiveNav('coach');
+    if(!document.getElementById('aiMessages').children.length){
+      addAIMessage(`Hola ${state.name}. Puedo orientarle usando su rutina, medidas, historial y check-in. No sustituyo a un médico o nutricionista.`);
+    }
+  }else{
+    showPage('home');
   }
 }
 function addAIMessage(text,user=false){
@@ -1248,6 +1361,14 @@ if('serviceWorker' in navigator){
       <button class="btn btn-primary" onclick="sendAI()">Enviar</button>
     </div>
   </aside>
+
+  <nav class="bottom-nav" aria-label="Navegación principal">
+    <button id="nav-home" class="active" onclick="showPage('home')"><span class="nav-icon">🏠</span>Inicio</button>
+    <button id="nav-routine" onclick="showPage('routine')"><span class="nav-icon">🏋️</span>Rutina</button>
+    <button id="nav-progress" onclick="showPage('progress')"><span class="nav-icon">📈</span>Progreso</button>
+    <button id="nav-meals" onclick="showPage('meals')"><span class="nav-icon">🥗</span>Comidas</button>
+    <button id="nav-coach" class="coach-tab" onclick="openCoachTab()"><span class="nav-icon">🤖</span>Coach</button>
+  </nav>
 
 </body>
 </html>
