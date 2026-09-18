@@ -1,8 +1,1 @@
-{
-  "name": "FitTogether - Ali",
-  "short_name": "FitTogether",
-  "start_url": "./",
-  "display": "standalone",
-  "background_color": "#f5f6f8",
-  "theme_color": "#111827"
-}
+{"name": "FitTogether Ali", "short_name": "FitTogether", "start_url": "./", "display": "standalone", "background_color": "#ffffff", "theme_color": "#0d141c"}
