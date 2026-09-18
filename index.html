@@ -727,7 +727,7 @@ const appData = JSON.parse(localStorage.getItem('gymControlProfiles') || `{
   "activeProfile":"yuran",
   "profiles":{
     "yuran":{"name":"Yurán","emoji":"👨","goal":"Bajar grasa, ganar masa muscular y proteger la rodilla.","measurements":[],"workouts":[],"weights":{}},
-    "ali":{"name":"Ali","emoji":"👩","goal":"Bajar peso, tonificar y aumentar masa muscular con énfasis en glúteos.","measurements":[],"workouts":[],"weights":{}}
+    "ali":{"name":"Ali","emoji":"👩","goal":"Primera fase: bajar peso y grasa. Después: tonificar y aumentar masa muscular, con énfasis en abdomen, brazos, piernas y glúteos. Entrenamiento en casa 3 días + 1 opcional.","measurements":[],"workouts":[],"weights":{}}
   }
 }`);
 let activeProfile = appData.activeProfile || 'yuran';
@@ -744,10 +744,12 @@ const weekDays=['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domi
 appData.sharedMealPlan = appData.sharedMealPlan || Object.fromEntries(weekDays.map(d=>[d,'']));
 appData.shoppingChecks = appData.shoppingChecks || {};
 Object.values(appData.profiles).forEach(p=>{
+  if(p.name==='Ali') p.goal='Primera fase: bajar peso y grasa. Después: tonificar y aumentar masa muscular, con énfasis en abdomen, brazos, piernas y glúteos. Entrenamiento en casa 3 días + 1 opcional.';
   p.measurements = p.measurements || [];
   p.workouts = p.workouts || [];
   p.weights = p.weights || {};
-  p.goals = p.goals || {weight:'',waist:'',workouts:5,water:8};
+  p.goals = p.goals || {weight:'',waist:'',workouts:(p.name==='Ali'?3:5),water:8};
+  if(p.name==='Ali' && Number(p.goals.workouts)===5) p.goals.workouts=3;
   p.checkins = p.checkins || {};
   p.exerciseLogs = p.exerciseLogs || {};
 });
@@ -822,56 +824,37 @@ const profileRoutines = {
   }
 ],
   ali: [
-  {
-    title:'Glúteos + femoral',
-    exercises:[
-      ['Hip thrust','4','10','Barbell_Glute_Bridge','Glúteos e isquiotibiales','Apoye la espalda alta, barbilla ligeramente recogida y eleve la cadera apretando glúteos.','Hiperextender la espalda o empujar solo con la punta de los pies.'],
-      ['Peso muerto rumano con mancuernas','4','10','Romanian_Deadlift_With_Dumbbells','Glúteos, femorales y espalda baja','Rodillas ligeramente flexionadas. Lleve la cadera atrás y baje las mancuernas cerca de las piernas.','Redondear la espalda o convertirlo en una sentadilla.'],
-      ['Curl femoral sentado','3','12','Seated_Leg_Curl','Isquiotibiales','Alinee la rodilla con el eje de la máquina y controle la vuelta.','Levantar la cadera o dejar caer el peso.'],
-      ['Patada de glúteo en polea','3','15','Glute_Kickback','Glúteo mayor','Mantenga el torso estable y extienda la pierna hacia atrás sin arquear la espalda.','Usar impulso o girar la cadera.'],
-      ['Abductores en máquina','4','15','Thigh_Abductor','Glúteo medio','Abra lentamente, pause y regrese controlando.','Rebotar o cerrar de golpe.']
-    ]
-  },
-  {
-    title:'Espalda + hombros',
-    exercises:[
-      ['Jalón al pecho','4','10','Wide-Grip_Lat_Pulldown','Dorsales y bíceps','Pecho alto y hombros abajo. Jale al pecho y controle la subida.','Jalar detrás del cuello o balancearse.'],
-      ['Remo sentado','4','10','Seated_Cable_Rows','Espalda media y bíceps','Jale hacia el abdomen con espalda neutral.','Inclinarse demasiado hacia atrás.'],
-      ['Press de hombros en máquina','3','10','Machine_Shoulder_(Military)_Press','Hombros y tríceps','Espalda apoyada y recorrido cómodo.','Arquear la espalda.'],
-      ['Elevaciones laterales','3','12','Side_Lateral_Raise','Deltoide lateral','Suba hasta la línea de hombros y baje lento.','Balancearse o encoger hombros.'],
-      ['Face pull','3','15','Face_Pull','Hombro posterior y espalda alta','Jale la cuerda hacia la cara con codos altos.','Bajar codos o usar demasiado peso.']
-    ]
-  },
-  {
-    title:'Cuádriceps + glúteos',
-    exercises:[
-      ['Prensa de piernas','4','12','Leg_Press','Cuádriceps y glúteos','Pies al ancho de hombros y recorrido cómodo. Empuje con todo el pie.','Bloquear las rodillas o despegar la cadera.'],
-      ['Sentadilla goblet','4','10','Goblet_Squat','Cuádriceps, glúteos y core','Sostenga la mancuerna al pecho, baje con control y mantenga el torso firme.','Colapsar las rodillas hacia adentro o perder postura.'],
-      ['Extensión de piernas','3','12','Leg_Extensions','Cuádriceps','Extienda de forma controlada y baje lento.','Patear el peso o usar impulso.'],
-      ['Hip thrust','4','12','Barbell_Glute_Bridge','Glúteos','Suba la cadera y mantenga una pausa arriba.','Arquear la espalda.'],
-      ['Abductores','3','20','Thigh_Abductor','Glúteo medio','Abra con control y pause.','Rebotar.']
-    ]
-  },
-  {
-    title:'Cardio + abdomen',
-    exercises:[
-      ['Caminadora inclinada','1','20 min','Walking_Treadmill','Cardio de bajo impacto','Camine a paso constante con inclinación moderada.','Sostenerse todo el tiempo o usar una velocidad que obligue a correr.'],
-      ['Crunch en máquina','3','15','Ab_Crunch_Machine','Abdominales','Acerque costillas y pelvis con el abdomen.','Jalar con brazos.'],
-      ['Plancha','3','30-45 s','Plank','Abdomen y estabilidad','Mantenga cuerpo recto y glúteos activos.','Dejar caer la cadera.'],
-      ['Pallof press','3','12','Cable_Judo_Flip','Core antirrotación','Empuje al frente sin dejar que el torso gire.','Rotar el cuerpo.'],
-      ['Puente de glúteos','3','15','Barbell_Glute_Bridge','Glúteos','Eleve la cadera apretando glúteos.','Hiperextender la espalda.']
-    ]
-  },
-  {
-    title:'Glúteos completos',
-    exercises:[
-      ['Hip thrust pesado','5','8','Barbell_Glute_Bridge','Glúteos','Use un peso desafiante manteniendo técnica limpia y pausa arriba.','Perder el control o hiperextender la espalda.'],
-      ['Peso muerto rumano','4','10','Romanian_Deadlift_With_Dumbbells','Glúteos y femorales','Lleve cadera atrás y mantenga espalda neutral.','Redondear espalda.'],
-      ['Step-up bajo','3','10','Dumbbell_Step_Ups','Glúteos y piernas','Use un banco bajo y suba empujando con la pierna de apoyo.','Impulsarse demasiado con la pierna de abajo.'],
-      ['Patada de glúteo','3','15','Glute_Kickback','Glúteo mayor','Extienda hacia atrás sin girar la cadera.','Arquear espalda.'],
-      ['Abductores','4','20','Thigh_Abductor','Glúteo medio','Abra con control y mantenga una pausa.','Rebotar.']
-    ]
-  }
+  {title:'Día A · Piernas + glúteos + abdomen (casa)',exercises:[
+    ['Sentadilla a silla','3','10-12','Goblet_Squat','Cuádriceps, glúteos y core','Coloque una silla firme detrás. Pies al ancho de hombros, abdomen activo y pecho alto. Lleve la cadera atrás hasta tocar suavemente la silla y suba empujando el piso con todo el pie.','Dejar caer el cuerpo en la silla, juntar las rodillas hacia adentro o acelerar para completar repeticiones.'],
+    ['Puente de glúteos con banda','4','12-15','Barbell_Glute_Bridge','Glúteos e isquiotibiales','Boca arriba, rodillas flexionadas y pies firmes. Banda sobre las rodillas si dispone de miniband. Eleve la cadera, apriete glúteos, pause 1 segundo y baje controlado.','Arquear la espalda baja, separar demasiado los pies o subir con impulso.'],
+    ['Peso muerto rumano con una pesa','3','10-12','Romanian_Deadlift_With_Dumbbells','Glúteos, femorales y core','Sostenga la pesa con ambas manos. Flexione apenas las rodillas, lleve la cadera atrás y baje con espalda neutral. Suba apretando glúteos.','Convertirlo en sentadilla, redondear la espalda o alejar la pesa del cuerpo.'],
+    ['Abducción de cadera con banda','3','15-20','Thigh_Abductor','Glúteo medio y estabilidad','Con la banda sobre rodillas o tobillos, separe las piernas lentamente manteniendo tensión constante y vuelva con control.','Rebotar o usar una banda tan fuerte que deforme la postura.'],
+    ['Dead bug','3','8-10 por lado','Dead_Bug','Abdomen profundo y estabilidad','Boca arriba, caderas y rodillas a 90°. Mantenga la zona lumbar estable y extienda brazo y pierna contraria. Alterne.','Arquear la espalda baja o hacer el movimiento demasiado rápido.'],
+    ['Plancha','3','20-30 s','Plank','Abdomen, glúteos y hombros','Codos debajo de hombros, cuerpo en línea recta y abdomen firme. Respire normalmente.','Dejar caer la cadera, levantar demasiado los glúteos o aguantar la respiración.']
+  ]},
+  {title:'Día B · Brazos + espalda + abdomen (casa)',exercises:[
+    ['Remo con banda','3','12-15','Seated_Cable_Rows','Espalda media, dorsales y bíceps','Ancle la banda de forma segura o pásela alrededor de los pies sentado. Jale hacia el abdomen llevando los codos atrás.','Encoger hombros, redondear la espalda o soltar la banda de golpe.'],
+    ['Press de hombro con una pesa','3','10-12','Dumbbell_Shoulder_Press','Hombros y tríceps','Sostenga la pesa con ambas manos o trabaje un brazo por vez. Abdomen firme, empuje arriba y baje lentamente.','Arquear la espalda, usar impulso de piernas o bloquear bruscamente los codos.'],
+    ['Curl de bíceps con banda','3','12-15','EZ-Bar_Curl','Bíceps y antebrazo','Pise el centro de la banda, codos pegados al torso y palmas hacia arriba. Flexione y regrese lentamente.','Balancear el cuerpo, adelantar los codos o perder tensión al bajar.'],
+    ['Extensión de tríceps con banda','3','12-15','Triceps_Pushdown_-_Rope_Attachment','Tríceps','Ancle la banda arriba de forma segura. Codos pegados al cuerpo, extienda los brazos y vuelva controlado.','Mover hombros y torso, abrir los codos o usar un anclaje inseguro.'],
+    ['Elevaciones laterales con banda','3','12-15','Side_Lateral_Raise','Hombro lateral','Pise la banda y eleve los brazos hacia los lados hasta aproximadamente la altura del hombro. Baje despacio.','Encoger los hombros, balancearse o subir demasiado.'],
+    ['Bird dog','3','8-10 por lado','Bird_Dog','Core, glúteos y estabilidad lumbar','En cuatro apoyos, extienda brazo y pierna contraria manteniendo pelvis estable. Pause y cambie de lado.','Rotar la cadera, arquear la espalda o buscar altura en vez de control.']
+  ]},
+  {title:'Día C · Glúteos + piernas + cuerpo completo (casa)',exercises:[
+    ['Sentadilla con banda','3','12','Goblet_Squat','Piernas, glúteos y core','Banda sobre las rodillas. Baje con cadera atrás y rodillas siguiendo la dirección de los pies. Suba empujando con todo el pie.','Rodillas hacia adentro, talones levantados o perder postura.'],
+    ['Hip thrust en sofá','4','12-15','Barbell_Glute_Bridge','Glúteos e isquiotibiales','Apoye la espalda alta en un sofá firme. Eleve la cadera hasta alinear tronco y muslos y pause apretando glúteos.','Hiperextender la espalda o usar un apoyo que pueda moverse.'],
+    ['Peso muerto rumano con una pesa','3','12','Romanian_Deadlift_With_Dumbbells','Glúteos y femorales','Lleve la cadera atrás con espalda neutral y la pesa cerca del cuerpo. Suba extendiendo la cadera.','Redondear la espalda, doblar demasiado las rodillas o hacer repeticiones rápidas.'],
+    ['Patada de glúteo con banda','3','15 por pierna','Glute_Kickback','Glúteo mayor','Con apoyo estable, lleve una pierna hacia atrás manteniendo pelvis y torso quietos. Apriete el glúteo y vuelva.','Arquear la espalda, girar la cadera o buscar demasiado recorrido.'],
+    ['Remo con banda','3','12','Seated_Cable_Rows','Espalda y bíceps','Jale la banda hacia el abdomen con hombros abajo y espalda neutral. Controle ida y vuelta.','Usar impulso o encoger los hombros.'],
+    ['Press de hombro','3','10-12','Dumbbell_Shoulder_Press','Hombros, tríceps y core','Empuje la pesa de forma controlada por encima de la cabeza manteniendo abdomen activo.','Arquear la espalda o sacrificar técnica.']
+  ]},
+  {title:'Día D opcional · Cardio + core + movilidad',exercises:[
+    ['Cuerda por intervalos','6','20 s / 40 s descanso','Rope_Jumping','Cardio, pantorrillas y coordinación','Salte bajo y suave. Haga 20 segundos y descanse 40 segundos. Complete 6 rondas.','Saltar demasiado alto, caer rígido o continuar si aparece dolor articular.'],
+    ['Puente de glúteos','3','15','Barbell_Glute_Bridge','Glúteos y core','Eleve la cadera apretando glúteos y mantenga 1 segundo arriba.','Arquear la zona lumbar o rebotar.'],
+    ['Dead bug','3','8 por lado','Dead_Bug','Abdomen profundo','Mantenga la zona lumbar estable mientras extiende extremidades contrarias.','Perder la posición lumbar.'],
+    ['Plancha lateral','3','15-25 s por lado','Side_Bridge','Oblicuos, glúteo medio y hombro','Antebrazo debajo del hombro y cadera elevada. Puede apoyar rodillas si es necesario.','Hundir la cadera, girar el tronco o aguantar la respiración.'],
+    ['Movilidad suave','1','8-10 min','Dynamic_Chest_Stretch','Movilidad general y recuperación','Haga movimientos suaves de cadera, hombros, columna torácica y tobillos sin dolor.','Forzar rangos o convertir la recuperación en otra sesión intensa.']
+  ]}
 ]
 };
 let routines = profileRoutines[activeProfile];
@@ -985,9 +968,9 @@ function applyProfileUI(){
   document.getElementById('heroGoal').textContent=p.goal;
   const select=document.getElementById('daySelect');
   const labels=activeProfile==='ali'
-    ? ['Lunes · Glúteos + femoral','Martes · Espalda + hombros','Miércoles · Cuádriceps + glúteos','Jueves · Cardio + abdomen','Viernes · Glúteos completos']
+    ? ['Día A · Piernas + glúteos + abdomen','Día B · Brazos + espalda + abdomen','Día C · Glúteos + piernas + full body','Día D · Opcional: cardio + core']
     : ['Lunes · Pecho + tríceps','Martes · Espalda + bíceps','Miércoles · Pierna segura','Jueves · Hombro + abdomen','Viernes · Full body'];
-  [...select.options].forEach((o,i)=>o.textContent=labels[i]);
+  select.innerHTML=labels.map((label,i)=>`<option value="${i}">${label}</option>`).join('');
 }
 function todayISO(){ return new Date().toISOString().slice(0,10); }
 document.getElementById('measureDate').value = todayISO();
@@ -1046,7 +1029,7 @@ function renderRoutine(){
     <div><span class="small">Cardio</span><strong>${plan.cardio} min</strong></div>
     <div><span class="small">Ejercicios</span><strong>${plan.count}</strong></div>`;
   const profileCoach=activeProfile==='ali'
-    ? 'Ali: priorice progresar en hip thrust, peso muerto rumano y abductores. No hace falta entrenar glúteos todos los días; la recuperación también construye músculo.'
+    ? 'Ali: base de 3 días y un cuarto opcional. Priorice técnica, constancia y progresión gradual. Para perder grasa, la alimentación y la actividad semanal importan más que hacer cardio excesivo.'
     : 'Yurán: mantenga movimientos controlados y sin dolor en la rodilla. En pierna, calidad de movimiento antes que aumentar peso.';
   document.getElementById('coachNote').innerHTML=`<strong>Coach:</strong> ${plan.label}<br>${profileCoach}`;
 
@@ -1076,7 +1059,7 @@ function renderRoutine(){
           <div class="guide-part guide-bad"><strong>✕ Evite esto</strong><p>${e[6]}</p></div>
         </div>
         <div class="sets" style="grid-template-columns:repeat(${Math.min(effectiveSets,5)},1fr)">
-          ${Array.from({length:effectiveSets},(_,s)=>`<input aria-label="Peso serie ${s+1}" type="number" step="0.5" placeholder="kg ${s+1}" value="${vals[s]||''}" id="w-${key}-${s}">`).join('')}
+          ${Array.from({length:effectiveSets},(_,s)=>`<input aria-label="Peso serie ${s+1}" type="text" placeholder="${activeProfile==='ali'?'carga/banda':'kg'} ${s+1}" value="${vals[s]||''}" id="w-${key}-${s}">`).join('')}
         </div>
         <div class="session-log-grid">
           <input id="reps-${key}" type="number" min="1" max="50" placeholder="Reps reales">
@@ -1117,7 +1100,8 @@ function getExerciseAdvice(key){
 
 function saveExercise(key,name,reps,totalSets){
   const vals=Array.from({length:totalSets},(_,s)=>document.getElementById(`w-${key}-${s}`)?.value||'').filter(v=>v!=='');
-  if(!vals.length){alert('Ingrese al menos un peso');return}
+  if(!vals.length && activeProfile!=='ali'){alert('Ingrese al menos un peso');return}
+  if(!vals.length && activeProfile==='ali') vals.push('peso corporal/banda');
   const actualReps=document.getElementById(`reps-${key}`)?.value||'';
   const rir=document.getElementById(`rir-${key}`)?.value||'';
   const pain=document.getElementById(`pain-${key}`)?.value||0;
@@ -1667,7 +1651,7 @@ function renderMeals(){
 }
 function dashboard(){
   const jsDay=new Date().getDay();
-  const dayIndex=Math.max(0,Math.min(4,jsDay-1));
+  const dayIndex=Math.max(0,Math.min(routines.length-1,jsDay-1));
   const plan=sessionPlan(selectedDuration,routines[dayIndex].exercises.length);
   document.getElementById('todayWorkout').innerHTML=`<h3>${routines[dayIndex].title}</h3><p>${selectedDuration} min: ${plan.warmup} calentamiento · ${plan.strength} fuerza · ${plan.cardio} cardio.</p>`;
   const latest=state.measurements.at(-1)||{};
@@ -1676,8 +1660,9 @@ function dashboard(){
   document.getElementById('kpiWorkouts').textContent=state.workouts.length;
   const now=new Date(), start=new Date(now); start.setDate(now.getDate()-((now.getDay()+6)%7)); start.setHours(0,0,0,0);
   const week=state.workouts.filter(w=>new Date(w.date+'T12:00:00')>=start).length;
-  document.getElementById('weeklyText').textContent=`${week} de 5 entrenamientos`;
-  document.getElementById('weeklyBar').style.width=Math.min(100,week/5*100)+'%';
+  const weeklyTarget=Number(state.goals?.workouts || (activeProfile==='ali'?3:5));
+  document.getElementById('weeklyText').textContent=`${week} de ${weeklyTarget} entrenamientos`;
+  document.getElementById('weeklyBar').style.width=Math.min(100,week/weeklyTarget*100)+'%';
   const dates=[...new Set(state.workouts.map(w=>w.date))].sort().reverse();
   let streak=0, d=new Date();
   while(true){const iso=d.toISOString().slice(0,10); if(dates.includes(iso)){streak++;d.setDate(d.getDate()-1)}else break}
